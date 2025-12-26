@@ -78,19 +78,20 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		limit = 10
 	}
 
+	scope := query.Get("scope")
+	if scope == "" {
+		scope = "all"
+	}
+
 	opts := services.UserQueryOptions{
 		Page:        page,
 		Limit:       limit,
 		SortBy:      query.Get("sortBy"),
-		Search:      query.Get("name"), // Mapping 'name' param from frontend to Search logic
-		SearchScope: "all",           // Default to all for general search
+		Search:      query.Get("name"),
+		SearchScope: scope,
 		RoleFilter:  query.Get("role"),
 	}
 	
-	// If 'name' param is used as general search (matching PHP logic)
-	// But if strictly following PHP controller, 'search' might be passed separately?
-	// The PHP controller logic was: $search = $query['search'] OR $query['name'] logic mixed.
-	// We'll map standard 'search' param too if present.
 	if s := query.Get("search"); s != "" {
 		opts.Search = s
 	}
