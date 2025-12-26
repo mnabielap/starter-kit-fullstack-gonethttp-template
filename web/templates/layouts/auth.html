@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{{ .Title }} - {{ .AppName }}</title>
+    {{ template "head-css.html" . }}
+</head>
+<body>
+
+    <div class="auth-page-wrapper">
+        <div class="auth-card">
+            <div class="text-center mb-4">
+                <h3>{{ .AppName }}</h3>
+                <p class="text-muted">Sign in to continue.</p>
+            </div>
+            
+            <!-- Content Injection -->
+            {{ template "content" . }}
+            
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- API Client -->
+    <script src="/assets/js/api-client.js"></script>
+    
+    <!-- Page Specific Script -->
+    {{ block "script" . }}{{ end }}
+</body>
+</html>

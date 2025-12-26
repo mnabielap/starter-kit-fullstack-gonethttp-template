@@ -1,0 +1,60 @@
+{{ define "content" }}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Create User</h4>
+            </div>
+            <div class="card-body">
+                <form id="createForm">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" id="role">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                    <a href="/users" class="btn btn-light">Cancel</a>
+                    <div id="alert" class="mt-3"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{{ end }}
+
+{{ define "script" }}
+<script>
+    document.getElementById('createForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            role: document.getElementById('role').value
+        };
+        
+        const res = await API.fetch('/v1/users', { method: 'POST', body: JSON.stringify(data) });
+        const json = await res.json();
+        
+        if (res.ok) {
+            window.location.href = '/users';
+        } else {
+            document.getElementById('alert').innerHTML = `<div class="alert alert-danger">${JSON.stringify(json.message)}</div>`;
+        }
+    });
+</script>
+{{ end }}

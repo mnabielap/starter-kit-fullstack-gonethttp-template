@@ -1,0 +1,178 @@
+{{ define "content" }}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header border-0">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="card-title mb-0">User Management</h5>
+                    <a href="/users/create" class="btn btn-success btn-sm">
+                        <i class="bi bi-plus-lg"></i> Create New User
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="card-body border border-dashed border-end-0 border-start-0">
+                <div class="row g-3">
+                    <div class="col-xxl-5 col-sm-6">
+                        <div class="search-box">
+                            <input type="text" class="form-control" id="searchName" placeholder="Search by name...">
+                        </div>
+                    </div>
+                    <div class="col-xxl-2 col-sm-4">
+                        <select class="form-select" id="filterRole">
+                            <option value="">All Roles</option>
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="col-xxl-2 col-sm-4">
+                        <select class="form-select" id="sortBy">
+                            <option value="created_at:desc">Newest</option>
+                            <option value="created_at:asc">Oldest</option>
+                            <option value="name:asc">Name (A-Z)</option>
+                        </select>
+                    </div>
+                    <div class="col-xxl-1 col-sm-4">
+                        <button type="button" class="btn btn-primary w-100" onclick="resetPageAndLoad()">Filter</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-nowrap align-middle" id="usersTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody><tr><td colspan="6" class="text-center">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="row align-items-center mt-4">
+                    <div class="col-sm">
+                        <div class="text-muted">
+                            Showing <span id="pageStart">0</span> to <span id="pageEnd">0</span> of <span id="totalResults">0</span> Results
+                        </div>
+                    </div>
+                    <div class="col-sm-auto">
+                        <ul class="pagination pagination-sm justify-content-end mb-0">
+                            <li class="page-item" id="prevBtn">
+                                <a href="javascript:void(0);" class="page-link" onclick="changePage(-1)">Previous</a>
+                            </li>
+                            <li class="page-item active">
+                                <a href="javascript:void(0);" class="page-link" id="currentPageDisplay">1</a>
+                            </li>
+                            <li class="page-item" id="nextBtn">
+                                <a href="javascript:void(0);" class="page-link" onclick="changePage(1)">Next</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{ end }}
+
+{{ define "script" }}
+<script>
+    let currentPage = 1;
+    const limit = 10;
+    let totalPages = 1;
+
+    function resetPageAndLoad() {
+        currentPage = 1;
+        loadUsers();
+    }
+
+    function changePage(delta) {
+        if (currentPage + delta >= 1 && currentPage + delta <= totalPages) {
+            currentPage += delta;
+            loadUsers();
+        }
+    }
+
+    async function loadUsers() {
+        const name = document.getElementById('searchName').value;
+        const role = document.getElementById('filterRole').value;
+        const sortBy = document.getElementById('sortBy').value;
+
+        const params = new URLSearchParams({ page: currentPage, limit, sortBy });
+        if (name) params.append('name', name);
+        if (role) params.append('role', role);
+
+        try {
+            const response = await API.fetch(`/v1/users?${params.toString()}`);
+            const json = await response.json();
+            
+            if (response.ok) {
+                const data = json; 
+                
+                const tbody = document.querySelector('#usersTable tbody');
+                tbody.innerHTML = '';
+                
+                totalPages = data.totalPages;
+                document.getElementById('totalResults').innerText = data.totalResults;
+                document.getElementById('currentPageDisplay').innerText = data.page;
+                
+                // Calculate range
+                const start = (data.page - 1) * 10 + 1;
+                const end = Math.min(start + 9, data.totalResults);
+                document.getElementById('pageStart').innerText = data.totalResults > 0 ? start : 0;
+                document.getElementById('pageEnd').innerText = data.totalResults > 0 ? end : 0;
+
+                // Disable buttons
+                document.getElementById('prevBtn').classList.toggle('disabled', data.page <= 1);
+                document.getElementById('nextBtn').classList.toggle('disabled', data.page >= data.totalPages);
+
+                if (!data.results || data.results.length === 0) {
+                     tbody.innerHTML = '<tr><td colspan="6" class="text-center">No users found</td></tr>';
+                     return;
+                }
+
+                data.results.forEach(user => {
+                    const editUrl = `/users/edit?id=${user.id}`;
+                    const date = new Date(user.createdAt).toLocaleDateString();
+                    const tr = `
+                        <tr>
+                            <td>#${user.id.substring(0,8)}...</td>
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td><span class="badge ${user.role === 'admin' ? 'bg-danger' : 'bg-success'}">${user.role}</span></td>
+                            <td>${date}</td>
+                            <td>
+                                <a href="${editUrl}" class="btn btn-sm btn-primary">Edit</a>
+                                <button class="btn btn-sm btn-danger" onclick="deleteUser('${user.id}')">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += tr;
+                });
+            } else {
+                 console.error('Error loading users:', json);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    
+    async function deleteUser(id) {
+        if(!confirm('Are you sure?')) return;
+        const res = await API.fetch(`/v1/users/${id}`, { method: 'DELETE' });
+        if(res.ok) loadUsers();
+        else alert('Failed to delete');
+    }
+
+    // Load initial data
+    document.addEventListener('DOMContentLoaded', loadUsers);
+</script>
+{{ end }}
