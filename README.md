@@ -242,7 +242,7 @@ python api_tests/A1.auth_register.py
 python api_tests/A2.auth_login.py
 
 # Refresh Token Exchange
-python api_tests/A3.auth_refresh_tokens.py
+python api_tests/A3.auth_refresh.py
 ```
 
 **2. User Management (Admin Role):**

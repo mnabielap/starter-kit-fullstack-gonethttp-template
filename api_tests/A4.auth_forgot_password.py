@@ -1,17 +1,19 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-import utils
+from utils import send_and_print, BASE_URL
 
-email = utils.load_config("current_user_email") or "admin@example.com"
+print("--- FORGOT PASSWORD ---")
 
-body = {
-    "email": email
+url = f"{BASE_URL}/auth/forgot-password"
+
+payload = {
+    "email": "admin@example.com"
 }
 
-utils.send_and_print(
-    url=f"{utils.BASE_URL}/auth/forgot-password",
+response = send_and_print(
+    url=url,
     method="POST",
-    body=body,
+    body=payload,
     output_file=f"{os.path.splitext(os.path.basename(__file__))[0]}.json"
 )

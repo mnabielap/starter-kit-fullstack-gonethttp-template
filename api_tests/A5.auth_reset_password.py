@@ -1,20 +1,21 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-import utils
+from utils import send_and_print, BASE_URL
 
-# In a real scenario, you'd paste the token from the console log (since we mocked email in Go)
-# For now, we simulate a call. It will likely fail without a valid token.
-token = "PASTE_VALID_TOKEN_HERE_FROM_CONSOLE_LOG"
-new_password = "newpassword123"
+print("--- RESET PASSWORD ---")
 
-body = {
-    "password": new_password
+mock_token = "PUT_VALID_TOKEN_HERE_FROM_LOGS" 
+
+url = f"{BASE_URL}/auth/reset-password?token={mock_token}"
+
+payload = {
+    "password": "newpassword123"
 }
 
-utils.send_and_print(
-    url=f"{utils.BASE_URL}/auth/reset-password?token={token}",
+response = send_and_print(
+    url=url,
     method="POST",
-    body=body,
+    body=payload,
     output_file=f"{os.path.splitext(os.path.basename(__file__))[0]}.json"
 )
